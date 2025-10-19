@@ -51,14 +51,33 @@ Watney has no authentication / security. If you'd like to set it up for remote a
 # Building your own Watney image
 `packer-builder-arm` is used to build the Watney image. You can find the image build definition in [watney-image.json](packer/watney-image.json). [This article](https://linuxhit.com/build-a-raspberry-pi-image-packer-packer-builder-arm/#:~:text=Packer%2Dbuilder%2Darm%20is%20a,server%20or%20other%20x86%20hardware.) may help setting up `packer` and `packer-builder-arm` on your linux system.
 
+# Upgrading from an Older Watney Image
+If you have an existing Watney installation running on an older image (pre-Bookworm), see the [Upgrade Guide](UPGRADE_GUIDE.md) for detailed instructions on how to upgrade to the latest version with improved compatibility for newer Raspberry Pi models and camera modules.
+
 # Raspberry Pi Compatibility
-Watney is designed to work with Raspberry Pi 3A+, however other versions may be compatible:
-* [scifiguy000](https://github.com/scifiguy000) confirmed to have successfully used a Raspberry Pi 4B in [this thread](https://github.com/nikivanov/watney/issues/27)
-* Raspberry Pi Zero 2 may work out of the box, but has not been confirmed yet
+Watney has been updated to support newer Raspberry Pi models and OS versions:
+* **Raspberry Pi 3A+** - Original design target, fully supported
+* **Raspberry Pi 3B/3B+** - Fully compatible
+* **Raspberry Pi 4B** - Confirmed working by [scifiguy000](https://github.com/scifiguy000) in [this thread](https://github.com/nikivanov/watney/issues/27)
+* **Raspberry Pi Zero 2 W** - Should work with the updated image
+* **Raspberry Pi 5** - May work but has not been tested yet
+
+The updated image is built on **Raspberry Pi OS Bookworm (2024)** which includes:
+* Modern `libcamera` camera system for compatibility with all camera modules (v1, v2, v3)
+* Latest security updates and package versions
+* Updated boot partition structure (`/boot/firmware`)
+* Python 3.11+ support with PEP 668 compliance
 
 # Camera Module Compatibility
-[camrichmond](https://github.com/camrichmond) discovered that the newest Raspberry Pi camera module v3 is not compatible with the current Watney image, since the camera module itself is not compatible with `raspivid`, which is how Watney gets
-its hardware-encoded h264 video stream. New Bullseye RPi images use `libcamera` instead. The fix is to simply change the command in `video.sh` as detailed [in this comment](https://github.com/nikivanov/watney/issues/34#issuecomment-1646009610). Additionally, [camrichmond](https://github.com/camrichmond) modified the camera housing for the new camera module, which you can [download here](https://github.com/camrichmond/watney_Pi_CameraV3). Thanks [camrichmond](https://github.com/camrichmond)!
+Watney now uses the modern `libcamera-vid` system instead of the deprecated `raspivid`, providing full compatibility with all Raspberry Pi camera modules:
+* **Camera Module v1** (OV5647) - Fully supported
+* **Camera Module v2** (IMX219) - Fully supported
+* **Camera Module v3** (IMX708) - Fully supported with the updated image
+* **HQ Camera** (IMX477) - Should work but not extensively tested
+
+If using Camera Module v3 with a custom housing, see [camrichmond's modified camera housing](https://github.com/camrichmond/watney_Pi_CameraV3).
+
+**Note for users of older Watney images:** If you're still using a pre-Bookworm image with `raspivid`, you can manually update by changing the command in `video.sh` from `raspivid` to `libcamera-vid` format. See the current `video.sh` file for the exact syntax.
 
 # Troubleshooting
 * Watney works best with Chrome. Other browsers may not work well, or at all.
