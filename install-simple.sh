@@ -92,6 +92,29 @@ check_disk_space() {
     log_success "Sufficient disk space available"
 }
 
+enable_swap() {
+    log_info "Checking swap space..."
+    local current_swap=$(free -m | grep Swap | awk '{print $2}')
+    
+    if [ "$current_swap" -lt 512 ]; then
+        log_warning "Insufficient swap detected. Adding 1GB swap file..."
+        local swap_file="/swapfile_watney"
+        
+        # Create swap if it doesn't exist
+        if [ ! -f "$swap_file" ]; then
+            dd if=/dev/zero of="$swap_file" bs=1M count=1024 >> "$INSTALL_LOG" 2>&1
+            chmod 600 "$swap_file"
+            mkswap "$swap_file" >> "$INSTALL_LOG" 2>&1
+        fi
+        
+        swapon "$swap_file" >> "$INSTALL_LOG" 2>&1
+        log_success "Swap enabled at $swap_file"
+        echo "$swap_file" > /tmp/watney_swap_location
+    else
+        log_success "Sufficient swap already available ($current_swap MB)"
+    fi
+}
+
 install_system_dependencies() {
     log_info "Installing system dependencies (this may take several minutes)..."
     
@@ -452,6 +475,9 @@ main() {
     log_info "Starting installation..."
     log_info "You can monitor progress in another terminal with: tail -f $INSTALL_LOG"
     echo ""
+    
+    # Enable swap early to prevent out-of-memory issues
+    enable_swap
     
     # Installation steps
     install_system_dependencies
