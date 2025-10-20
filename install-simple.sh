@@ -141,12 +141,12 @@ install_system_dependencies() {
     log_info "Installing system dependencies (this may take several minutes)..."
     log_info "Optimizing for low memory..."
     
-    # Set apt to use less memory
+    # Set apt cache sizes (need to be large enough for Trixie's package lists)
     export APT_CONFIG=/tmp/apt-low-mem.conf
     cat > /tmp/apt-low-mem.conf << 'EOF'
-APT::Cache-Start "20000000";
-APT::Cache-Grow "1000";
-APT::Cache-Limit "20000000";
+APT::Cache-Start "100000000";
+APT::Cache-Grow "2000000";
+APT::Cache-Limit "200000000";
 Dir::Cache::pkgcache "";
 Dir::Cache::srcpkgcache "";
 EOF
