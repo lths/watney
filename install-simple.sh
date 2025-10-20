@@ -139,8 +139,20 @@ enable_swap() {
 
 install_system_dependencies() {
     log_info "Installing system dependencies (this may take several minutes)..."
+    log_info "Optimizing for low memory..."
     
-    apt-get update >> "$INSTALL_LOG" 2>&1
+    # Set apt to use less memory
+    export APT_CONFIG=/tmp/apt-low-mem.conf
+    cat > /tmp/apt-low-mem.conf << 'EOF'
+APT::Cache-Start "20000000";
+APT::Cache-Grow "1000";
+APT::Cache-Limit "20000000";
+Dir::Cache::pkgcache "";
+Dir::Cache::srcpkgcache "";
+EOF
+    
+    log_info "Running apt-get update..."
+    apt-get update 2>&1 | tee -a "$INSTALL_LOG"
     
     # Core dependencies (without pigpio first)
     apt-get install -y \
