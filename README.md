@@ -19,12 +19,32 @@ You can find all 3D printable parts in the [STLs folder](https://github.com/niki
 Print every part with 0.2mm layer height. No supports are needed. The base part includes tearaway lilypads to help with adhesion. Generally, the prints can take a long time but none of them are particularly challenging to print.
 
 
+# Installation
+
+Watney can be installed in multiple ways depending on your needs:
+
+## Option 1: Pre-built SD Card Image (Recommended for New Builds)
+Click on the [Releases](https://github.com/nikivanov/watney/releases) tab and download the [latest Watney SD card image](https://github.com/nikivanov/watney/releases/latest) - it's the large .zip file found under *Assets*. Use [balenaEtcher](https://www.balena.io/etcher/) or similar to write the .img file onto the SD card.
+
+## Option 2: Automated Installation on Existing Pi (New!)
+If you already have a Raspberry Pi with Raspberry Pi OS installed, you can use our automated installation script:
+
+```bash
+git clone https://github.com/nikivanov/watney.git
+cd watney
+chmod +x install.sh
+sudo ./install.sh
+```
+
+The installation takes 45-60 minutes and handles everything automatically. See [INSTALL.md](INSTALL.md) for detailed instructions.
+
+## Option 3: Manual Installation
+For advanced users who want complete control, see the [Installation Guide](INSTALL.md) or [Upgrade Guide](UPGRADE_GUIDE.md) for step-by-step manual installation instructions.
+
 # Assembly
 You'll be working with Lithium Ion batteries - please be careful not to puncture or short them, as they can become a fire hazard if used improperly. **You assume all responsibility for damages that may be caused by your Watney, whether it's assembled correctly or otherwise.**
 
-Click on the [Releases](https://github.com/nikivanov/watney/releases) tab and download the [latest Watney SD card image](https://github.com/nikivanov/watney/releases/latest) - it's the large .zip file found under *Assets*. Use [balenaEtcher](https://www.balena.io/etcher/) or similar to write the .img file onto the SD card.
-
-After that, follow the detailed assembly video below!
+After installing the software using one of the methods above, follow the detailed assembly video below!
 
 Wiring diagrams that you see in the video can also be [found here](https://github.com/nikivanov/watney/tree/master/images/wiring).
 
