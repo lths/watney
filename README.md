@@ -32,11 +32,12 @@ If you already have a Raspberry Pi with Raspberry Pi OS installed, you can use o
 ```bash
 git clone https://github.com/nikivanov/watney.git
 cd watney
-chmod +x install.sh
-sudo ./install.sh
+sudo bash install.sh
 ```
 
 The installation takes 45-60 minutes and handles everything automatically. See [INSTALL.md](INSTALL.md) for detailed instructions.
+
+**Note**: If you encounter permission errors, use `sudo bash install.sh` instead of `sudo ./install.sh`.
 
 ## Option 3: Manual Installation
 For advanced users who want complete control, see the [Installation Guide](INSTALL.md) or [Upgrade Guide](UPGRADE_GUIDE.md) for step-by-step manual installation instructions.

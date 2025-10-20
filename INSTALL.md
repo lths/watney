@@ -11,10 +11,12 @@ For the fastest installation, use the automated installation script:
 git clone https://github.com/nikivanov/watney.git
 cd watney
 
-# Make the script executable
-chmod +x install.sh
-
 # Run the installation (requires root)
+# Method 1: Using bash directly (recommended if you get permission errors)
+sudo bash install.sh
+
+# Method 2: Make executable first, then run
+chmod +x install.sh
 sudo ./install.sh
 ```
 
