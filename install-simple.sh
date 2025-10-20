@@ -96,22 +96,44 @@ enable_swap() {
     log_info "Checking swap space..."
     local current_swap=$(free -m | grep Swap | awk '{print $2}')
     
+    log_info "Current swap: ${current_swap}MB"
+    
     if [ "$current_swap" -lt 512 ]; then
         log_warning "Insufficient swap detected. Adding 1GB swap file..."
         local swap_file="/swapfile_watney"
         
-        # Create swap if it doesn't exist
-        if [ ! -f "$swap_file" ]; then
-            dd if=/dev/zero of="$swap_file" bs=1M count=1024 >> "$INSTALL_LOG" 2>&1
-            chmod 600 "$swap_file"
-            mkswap "$swap_file" >> "$INSTALL_LOG" 2>&1
+        # Turn off any existing swap first
+        swapoff -a 2>/dev/null || true
+        
+        # Remove old swap file if it exists
+        rm -f "$swap_file"
+        
+        # Create new swap file
+        log_info "Creating swap file (this takes a minute)..."
+        dd if=/dev/zero of="$swap_file" bs=1M count=1024 status=progress 2>&1 | tee -a "$INSTALL_LOG"
+        chmod 600 "$swap_file"
+        
+        log_info "Setting up swap..."
+        mkswap "$swap_file" 2>&1 | tee -a "$INSTALL_LOG"
+        
+        log_info "Enabling swap..."
+        swapon "$swap_file" 2>&1 | tee -a "$INSTALL_LOG"
+        
+        # Verify swap is now active
+        sleep 2
+        local new_swap=$(free -m | grep Swap | awk '{print $2}')
+        if [ "$new_swap" -gt 512 ]; then
+            log_success "Swap enabled: ${new_swap}MB now available"
+            free -m | tee -a "$INSTALL_LOG"
+        else
+            log_error "Failed to enable swap! Installation may fail."
+            free -m | tee -a "$INSTALL_LOG"
         fi
         
-        swapon "$swap_file" >> "$INSTALL_LOG" 2>&1
-        log_success "Swap enabled at $swap_file"
         echo "$swap_file" > /tmp/watney_swap_location
     else
         log_success "Sufficient swap already available ($current_swap MB)"
+        free -m | tee -a "$INSTALL_LOG"
     fi
 }
 
