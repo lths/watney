@@ -216,7 +216,6 @@ install_janus_dependencies() {
 
 build_janus() {
     log_info "Building Janus WebRTC Server (this will take 20-40 minutes)..."
-    log_info "This requires significant memory. Adding temporary swap space..."
     
     # Check if Janus is already installed
     if [ -d "/opt/janus" ]; then
@@ -230,14 +229,24 @@ build_janus() {
         rm -rf /opt/janus
     fi
     
-    # Add temporary swap to help with compilation
+    # Check current swap
+    local current_swap=$(free -m | grep Swap | awk '{print $2}')
+    log_info "Current swap: ${current_swap}MB"
+    
+    # Only add temp swap if we don't have enough
     local swap_file="/tmp/watney_swap"
-    log_info "Creating temporary 1GB swap file..."
-    dd if=/dev/zero of="$swap_file" bs=1M count=1024 >> "$INSTALL_LOG" 2>&1
-    chmod 600 "$swap_file"
-    mkswap "$swap_file" >> "$INSTALL_LOG" 2>&1
-    swapon "$swap_file" >> "$INSTALL_LOG" 2>&1
-    log_success "Swap enabled"
+    local added_swap=false
+    if [ "$current_swap" -lt 2048 ]; then
+        log_info "Adding temporary 1GB swap file for compilation..."
+        dd if=/dev/zero of="$swap_file" bs=1M count=1024 >> "$INSTALL_LOG" 2>&1
+        chmod 600 "$swap_file"
+        mkswap "$swap_file" >> "$INSTALL_LOG" 2>&1
+        swapon "$swap_file" >> "$INSTALL_LOG" 2>&1
+        log_success "Temporary swap enabled"
+        added_swap=true
+    else
+        log_info "Sufficient swap already available, skipping temp swap creation"
+    fi
     
     local build_dir="/tmp/janus-build"
     rm -rf "$build_dir"
@@ -256,10 +265,12 @@ build_janus() {
     make -j1 >> "$INSTALL_LOG" 2>&1
     make install >> "$INSTALL_LOG" 2>&1
     
-    # Clean up swap
-    swapoff "$swap_file" >> "$INSTALL_LOG" 2>&1
-    rm -f "$swap_file"
-    log_info "Temporary swap removed"
+    # Clean up temp swap only if we added it
+    if [ "$added_swap" = true ]; then
+        swapoff "$swap_file" >> "$INSTALL_LOG" 2>&1
+        rm -f "$swap_file"
+        log_info "Temporary swap removed"
+    fi
     
     cd "$SCRIPT_DIR"
     rm -rf "$build_dir"
