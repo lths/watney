@@ -158,7 +158,8 @@ install_janus_dependencies() {
 }
 
 build_janus() {
-    log_info "Building Janus WebRTC Server (this will take 20-30 minutes)..."
+    log_info "Building Janus WebRTC Server (this will take 20-40 minutes)..."
+    log_info "This requires significant memory. Adding temporary swap space..."
     
     # Check if Janus is already installed
     if [ -d "/opt/janus" ]; then
@@ -172,6 +173,15 @@ build_janus() {
         rm -rf /opt/janus
     fi
     
+    # Add temporary swap to help with compilation
+    local swap_file="/tmp/watney_swap"
+    log_info "Creating temporary 1GB swap file..."
+    dd if=/dev/zero of="$swap_file" bs=1M count=1024 >> "$INSTALL_LOG" 2>&1
+    chmod 600 "$swap_file"
+    mkswap "$swap_file" >> "$INSTALL_LOG" 2>&1
+    swapon "$swap_file" >> "$INSTALL_LOG" 2>&1
+    log_success "Swap enabled"
+    
     local build_dir="/tmp/janus-build"
     rm -rf "$build_dir"
     mkdir -p "$build_dir"
@@ -182,11 +192,17 @@ build_janus() {
     cd janus-gateway
     git checkout 5ec8568709c483ae89b1aa77e127d14c3b59428c >> "$INSTALL_LOG" 2>&1
     
-    # Build Janus
+    # Build Janus with reduced parallelism to save memory
     sh autogen.sh >> "$INSTALL_LOG" 2>&1
     ./configure --prefix=/opt/janus --disable-aes-gcm >> "$INSTALL_LOG" 2>&1
-    make >> "$INSTALL_LOG" 2>&1
+    log_info "Compiling (using single-threaded build to conserve memory)..."
+    make -j1 >> "$INSTALL_LOG" 2>&1
     make install >> "$INSTALL_LOG" 2>&1
+    
+    # Clean up swap
+    swapoff "$swap_file" >> "$INSTALL_LOG" 2>&1
+    rm -f "$swap_file"
+    log_info "Temporary swap removed"
     
     cd "$SCRIPT_DIR"
     rm -rf "$build_dir"
