@@ -97,16 +97,51 @@ install_system_dependencies() {
     
     apt-get update >> "$INSTALL_LOG" 2>&1
     
-    # Core dependencies
+    # Core dependencies (without pigpio first)
     apt-get install -y \
-        git python3-pip python3-venv pigpio python3-pigpio \
-        python3-rpi.gpio python3-smbus python3-numpy \
-        libcamera-apps gstreamer1.0-tools gstreamer1.0-plugins-good \
-        gstreamer1.0-plugins-bad gstreamer1.0-alsa python3-gst-1.0 \
-        dnsmasq hostapd python3-flask python3-requests \
+        git python3-pip python3-venv python3-rpi.gpio python3-smbus \
+        python3-numpy libcamera-apps gstreamer1.0-tools \
+        gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+        gstreamer1.0-alsa python3-gst-1.0 dnsmasq hostapd \
+        python3-flask python3-requests \
         >> "$INSTALL_LOG" 2>&1
     
+    # Try to install pigpio from package, build from source if not available
+    if apt-get install -y pigpio python3-pigpio >> "$INSTALL_LOG" 2>&1; then
+        log_success "pigpio installed from package"
+    else
+        log_warning "pigpio package not available, building from source..."
+        build_pigpio
+    fi
+    
     log_success "System dependencies installed"
+}
+
+build_pigpio() {
+    log_info "Building pigpio from source..."
+    
+    # Install build dependencies
+    apt-get install -y gcc make wget unzip >> "$INSTALL_LOG" 2>&1
+    
+    local build_dir="/tmp/pigpio-build"
+    rm -rf "$build_dir"
+    mkdir -p "$build_dir"
+    cd "$build_dir"
+    
+    # Download and build pigpio
+    wget https://github.com/joan2937/pigpio/archive/master.zip >> "$INSTALL_LOG" 2>&1
+    unzip master.zip >> "$INSTALL_LOG" 2>&1
+    cd pigpio-master
+    make >> "$INSTALL_LOG" 2>&1
+    make install >> "$INSTALL_LOG" 2>&1
+    
+    # Install Python bindings
+    pip3 install --break-system-packages pigpio >> "$INSTALL_LOG" 2>&1
+    
+    cd "$SCRIPT_DIR"
+    rm -rf "$build_dir"
+    
+    log_success "pigpio built and installed from source"
 }
 
 install_janus_dependencies() {
