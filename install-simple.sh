@@ -295,9 +295,35 @@ install_mimic_tts() {
     mkdir -p "$build_dir"
     cd "$build_dir"
     
-    git clone https://github.com/MycroftAI/mimic.git >> "$INSTALL_LOG" 2>&1
+    # Use shallow clone to reduce memory usage, with retry logic
+    log_info "Cloning Mimic repository (using shallow clone to save memory)..."
+    local max_attempts=3
+    local attempt=1
+    while [ $attempt -le $max_attempts ]; do
+        log_info "Clone attempt $attempt of $max_attempts..."
+        if git clone --depth 1 --single-branch https://github.com/MycroftAI/mimic.git >> "$INSTALL_LOG" 2>&1; then
+            log_success "Clone successful"
+            break
+        else
+            if [ $attempt -eq $max_attempts ]; then
+                log_error "Failed to clone mimic after $max_attempts attempts"
+                log_warning "Skipping Mimic TTS installation - you can install it manually later"
+                cd "$SCRIPT_DIR"
+                rm -rf "$build_dir"
+                return 0
+            fi
+            log_warning "Clone failed, retrying..."
+            rm -rf mimic
+            sleep 5
+            attempt=$((attempt + 1))
+        fi
+    done
+    
     cd mimic
-    git checkout 255213684c9cb877c8b7017a8dc0cedcf9cf695b >> "$INSTALL_LOG" 2>&1
+    # Fetch the specific commit we need
+    git fetch --depth 1 origin 255213684c9cb877c8b7017a8dc0cedcf9cf695b >> "$INSTALL_LOG" 2>&1 || true
+    git checkout 255213684c9cb877c8b7017a8dc0cedcf9cf695b >> "$INSTALL_LOG" 2>&1 || log_warning "Using HEAD instead of specific commit"
+    
     ./autogen.sh >> "$INSTALL_LOG" 2>&1
     ./configure --prefix="/usr/local" >> "$INSTALL_LOG" 2>&1
     make >> "$INSTALL_LOG" 2>&1
