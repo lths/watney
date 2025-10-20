@@ -1,19 +1,12 @@
 #!/bin/bash
 #
-# Watney Telepresence Rover - Installation Script
+# Watney Telepresence Rover - Installation Script (Simple Version)
 # This script installs Watney on an existing Raspberry Pi system
 #
-# Usage: sudo bash install.sh
+# Usage: sudo bash install-simple.sh
 #
 
 set -e  # Exit on any error
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
 
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,19 +20,19 @@ fi
 
 # Functions
 log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1" | tee -a "$INSTALL_LOG"
+    echo "[INFO] $1" | tee -a "$INSTALL_LOG"
 }
 
 log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1" | tee -a "$INSTALL_LOG"
+    echo "[SUCCESS] $1" | tee -a "$INSTALL_LOG"
 }
 
 log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1" | tee -a "$INSTALL_LOG"
+    echo "[WARNING] $1" | tee -a "$INSTALL_LOG"
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $1" | tee -a "$INSTALL_LOG"
+    echo "[ERROR] $1" | tee -a "$INSTALL_LOG"
 }
 
 check_root() {
@@ -348,9 +341,9 @@ copy_audio_configs() {
 
 print_summary() {
     echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "=========================================================="
     log_success "Watney installation completed successfully!"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "=========================================================="
     echo ""
     log_info "Next steps:"
     echo "  1. Review the configuration in /home/pi/watney/rover.conf"
@@ -370,13 +363,16 @@ print_summary() {
 # Main installation flow
 main() {
     echo ""
-    echo "╔══════════════════════════════════════════════════════╗"
-    echo "║   🤖  Watney Telepresence Rover Installation  🤖    ║"
-    echo "╚══════════════════════════════════════════════════════╝"
+    echo "=========================================================="
+    echo "   Watney Telepresence Rover Installation"
+    echo "=========================================================="
     echo ""
     
     # Clear log
     > "$INSTALL_LOG"
+    
+    log_info "Log file: $INSTALL_LOG"
+    echo ""
     
     # Pre-flight checks
     log_info "Running pre-flight checks..."
@@ -403,6 +399,8 @@ main() {
     
     echo ""
     log_info "Starting installation..."
+    log_info "You can monitor progress in another terminal with: tail -f $INSTALL_LOG"
+    echo ""
     
     # Installation steps
     install_system_dependencies
