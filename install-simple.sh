@@ -338,26 +338,36 @@ install_mimic_tts() {
 install_watney_software() {
     log_info "Installing Watney software..."
     
+    # Determine actual user (not root)
+    local ACTUAL_USER="${SUDO_USER:-$USER}"
+    if [ "$ACTUAL_USER" = "root" ]; then
+        ACTUAL_USER="pi"  # fallback to pi if we can't determine
+    fi
+    local USER_HOME=$(eval echo "~$ACTUAL_USER")
+    
+    log_info "Installing for user: $ACTUAL_USER (home: $USER_HOME)"
+    
     # Install Python dependencies
     pip3 install --break-system-packages aiohttp apa102-pi psutil pyalsaaudio smbus >> "$INSTALL_LOG" 2>&1
     
     # Set up Watney files
-    local watney_dir="/home/pi/watney"
+    local watney_dir="$USER_HOME/watney"
     if [ "$SCRIPT_DIR" != "$watney_dir" ]; then
         log_info "Copying Watney files to $watney_dir..."
         mkdir -p "$watney_dir"
         cp -r "$SCRIPT_DIR"/* "$watney_dir"/
-        chown -R pi:pi "$watney_dir"
+        chown -R "$ACTUAL_USER:$ACTUAL_USER" "$watney_dir"
     fi
     
     # Copy SSL certificates
-    cp "$watney_dir/cert.pem" /home/pi/ 2>/dev/null || log_warning "cert.pem not found"
-    cp "$watney_dir/key.pem" /home/pi/ 2>/dev/null || log_warning "key.pem not found"
+    cp "$watney_dir/cert.pem" "$USER_HOME/" 2>/dev/null || log_warning "cert.pem not found"
+    cp "$watney_dir/key.pem" "$USER_HOME/" 2>/dev/null || log_warning "key.pem not found"
+    chown "$ACTUAL_USER:$ACTUAL_USER" "$USER_HOME/cert.pem" "$USER_HOME/key.pem" 2>/dev/null || true
     
     # Copy Janus configuration
     if [ -d "$watney_dir/janus" ]; then
         cp -r "$watney_dir/janus"/* /opt/janus/etc/janus/
-        chown -R pi:pi /opt/janus
+        chown -R "$ACTUAL_USER:$ACTUAL_USER" /opt/janus
     fi
     
     log_success "Watney software installed"
@@ -428,12 +438,19 @@ install_systemd_service() {
 setup_turnkey() {
     log_info "Setting up WiFi configuration (Turnkey)..."
     
-    if [ -d "/home/pi/raspberry-pi-turnkey" ]; then
+    # Determine actual user
+    local ACTUAL_USER="${SUDO_USER:-$USER}"
+    if [ "$ACTUAL_USER" = "root" ]; then
+        ACTUAL_USER="pi"
+    fi
+    local USER_HOME=$(eval echo "~$ACTUAL_USER")
+    
+    if [ -d "$USER_HOME/raspberry-pi-turnkey" ]; then
         log_info "Turnkey already installed, skipping"
         return 0
     fi
     
-    cd /home/pi
+    cd "$USER_HOME"
     git clone https://github.com/nikivanov/raspberry-pi-turnkey.git >> "$INSTALL_LOG" 2>&1
     
     pip3 install wpasupplicantconf >> "$INSTALL_LOG" 2>&1
@@ -446,9 +463,9 @@ setup_turnkey() {
     
     # Configure hostapd to unblock wifi
     if [ -f "$SCRIPT_DIR/packer/unblock_wifi.sh" ]; then
-        cp "$SCRIPT_DIR/packer/unblock_wifi.sh" /home/pi/
-        chmod +x /home/pi/unblock_wifi.sh
-        sed -i '/^ExecStart=.*/a ExecStartPre=/bin/bash /home/pi/unblock_wifi.sh' \
+        cp "$SCRIPT_DIR/packer/unblock_wifi.sh" "$USER_HOME/"
+        chmod +x "$USER_HOME/unblock_wifi.sh"
+        sed -i '/^ExecStart=.*/a ExecStartPre=/bin/bash '"$USER_HOME"'/unblock_wifi.sh' \
             /usr/lib/systemd/system/hostapd.service 2>/dev/null || true
     fi
     
@@ -458,7 +475,7 @@ setup_turnkey() {
     cp turnkey.service /etc/systemd/system/
     systemctl enable turnkey >> "$INSTALL_LOG" 2>&1
     
-    chown -R pi:pi /home/pi/raspberry-pi-turnkey
+    chown -R "$ACTUAL_USER:$ACTUAL_USER" "$USER_HOME/raspberry-pi-turnkey"
     
     cd "$SCRIPT_DIR"
     
@@ -485,17 +502,24 @@ copy_audio_configs() {
 }
 
 print_summary() {
+    # Determine actual user
+    local ACTUAL_USER="${SUDO_USER:-$USER}"
+    if [ "$ACTUAL_USER" = "root" ]; then
+        ACTUAL_USER="pi"
+    fi
+    local USER_HOME=$(eval echo "~$ACTUAL_USER")
+    
     echo ""
     echo "=========================================================="
     log_success "Watney installation completed successfully!"
     echo "=========================================================="
     echo ""
     log_info "Next steps:"
-    echo "  1. Review the configuration in /home/pi/watney/rover.conf"
+    echo "  1. Review the configuration in $USER_HOME/watney/rover.conf"
     echo "  2. Reboot your Raspberry Pi: sudo reboot"
     echo "  3. After reboot, Watney will start automatically"
     echo "  4. Access the web interface at: https://$(hostname).local:5000"
-    echo "  5. Default SSH credentials: pi / watney5"
+    echo "  5. SSH user: $ACTUAL_USER"
     echo ""
     log_info "WiFi Configuration:"
     echo "  - If not connected to WiFi, Watney will host 'Watney' hotspot"
