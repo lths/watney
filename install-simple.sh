@@ -384,6 +384,12 @@ install_watney_software() {
     # Copy Janus configuration
     if [ -d "$watney_dir/janus" ]; then
         cp -r "$watney_dir/janus"/* /opt/janus/etc/janus/
+        
+        # Replace USER_PLACEHOLDER with actual username in Janus configs
+        log_info "Configuring Janus certificate paths for user: $ACTUAL_USER"
+        sed -i "s|USER_PLACEHOLDER|$ACTUAL_USER|g" /opt/janus/etc/janus/janus.jcfg
+        sed -i "s|USER_PLACEHOLDER|$ACTUAL_USER|g" /opt/janus/etc/janus/janus.transport.http.jcfg
+        
         chown -R "$ACTUAL_USER:$ACTUAL_USER" /opt/janus
     fi
     

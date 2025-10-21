@@ -128,7 +128,8 @@ def createSSLContext(homePath):
     print('Using TLS with keys in {!r}'.format(homePath))
     chain_pem = os.path.join(homePath, 'cert.pem')
     key_pem = os.path.join(homePath, 'key.pem')
-    sslctx = ssl.create_default_context()
+    # Use CLIENT_AUTH purpose for server-side SSL context
+    sslctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
 
     try:
         sslctx.load_cert_chain(chain_pem, keyfile=key_pem)
@@ -215,6 +216,3 @@ if __name__ == "__main__":
         videoStream.endProcess()
         for runner in runners:
             loop.run_until_complete(runner.cleanup())
-
-    
-
