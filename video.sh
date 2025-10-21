@@ -1,1 +1,1 @@
-libcamera-vid -n -t 0 --width 1280 --height 720 --framerate 25 --bitrate 2500000 --inline --profile baseline --intra 25 --codec h264 --flush -o - | gst-launch-1.0 fdsrc do-timestamp=true ! h264parse ! rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=8004
+rpicam-vid -n -t 0 --width 1280 --height 720 --framerate 25 --bitrate 2500000 --inline --profile baseline --intra 25 --codec h264 --flush -o - | gst-launch-1.0 fdsrc do-timestamp=true ! h264parse ! rtph264pay config-interval=1 pt=96 ! udpsink host=127.0.0.1 port=8004

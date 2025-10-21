@@ -47,7 +47,8 @@ function audioDeviceChange() {
 
 let reconnecting = false;
 function connectJanus() {
-    var server = "https://" + window.location.hostname + ":8089/janus";
+    // Use same port as main server (proxied through to Janus on 8089)
+    var server = "https://" + window.location.hostname + ":" + window.location.port + "/janus";
     
     janusConnection = new Janus({
         server: server,

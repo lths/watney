@@ -235,6 +235,10 @@ install_watney_software() {
         sed -i "s|USER_PLACEHOLDER|$ACTUAL_USER|g" /opt/janus/etc/janus/janus.jcfg
         sed -i "s|USER_PLACEHOLDER|$ACTUAL_USER|g" /opt/janus/etc/janus/janus.transport.http.jcfg
         
+        # Replace USER_PLACEHOLDER in rover.conf
+        log_info "Configuring rover.conf for user: $ACTUAL_USER"
+        sed -i "s|USER_PLACEHOLDER|$ACTUAL_USER|g" "$watney_dir/rover.conf"
+        
         chown -R "$ACTUAL_USER:$ACTUAL_USER" /opt/janus
     fi
     
