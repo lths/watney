@@ -195,10 +195,27 @@ build_pigpio() {
     # Install Python bindings
     pip3 install --break-system-packages pigpio >> "$INSTALL_LOG" 2>&1
     
+    # Create systemd service for pigpiod
+    log_info "Creating pigpiod systemd service..."
+    cat > /lib/systemd/system/pigpiod.service << 'EOF'
+[Unit]
+Description=Pigpio daemon
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/local/bin/pigpiod -l
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    systemctl daemon-reload
+    
     cd "$SCRIPT_DIR"
     rm -rf "$build_dir"
     
-    log_success "pigpio built and installed from source"
+    log_success "pigpio built and installed from source with systemd service"
 }
 
 install_janus_dependencies() {
