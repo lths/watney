@@ -18,7 +18,6 @@ import asyncio
 from januseventhandler import JanusEventHandler
 from tts import TTSSpeaker
 from startupSequence import StartupSequenceController
-import aiohttp
 
 routes = web.RouteTableDef()
 
@@ -114,42 +113,6 @@ async def onJanusEvent(request):
         print('Error handling janus event: {}'.format(e))
     finally:
         return web.Response(text="OK")
-
-@routes.route('*', '/janus{path:.*}')
-async def proxy_janus(request):
-    """Proxy requests to Janus WebRTC server to avoid separate certificate acceptance"""
-    # Forward request to Janus on port 8089
-    janus_url = 'https://localhost:8089/janus' + request.match_info.get('path', '')
-    
-    # Copy query parameters
-    if request.query_string:
-        janus_url += '?' + request.query_string
-    
-    try:
-        # Create SSL context that doesn't verify certificates (internal connection)
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
-        
-        connector = aiohttp.TCPConnector(ssl=ssl_context)
-        async with aiohttp.ClientSession(connector=connector) as session:
-            # Forward the request
-            async with session.request(
-                method=request.method,
-                url=janus_url,
-                headers={k: v for k, v in request.headers.items() if k.lower() not in ['host', 'connection']},
-                data=await request.read() if request.method in ['POST', 'PUT', 'PATCH'] else None
-            ) as resp:
-                # Return the response from Janus
-                body = await resp.read()
-                return web.Response(
-                    body=body,
-                    status=resp.status,
-                    headers={k: v for k, v in resp.headers.items() if k.lower() not in ['transfer-encoding', 'connection']}
-                )
-    except Exception as e:
-        print(f'Error proxying to Janus: {e}')
-        return web.Response(status=502, text=f'Bad Gateway: {e}')
 
 # Python 3.7 is overly wordy about self-signed certificates, so we'll suppress the error here
 def loopExceptionHandler(loop, context):
