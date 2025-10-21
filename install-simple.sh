@@ -393,13 +393,37 @@ install_watney_software() {
 configure_system() {
     log_info "Configuring system settings..."
     
+    # Check if pigpiod service exists, create it if not
+    if ! systemctl list-unit-files | grep -q pigpiod.service; then
+        log_warning "pigpiod service not found, creating it..."
+        
+        # Determine where pigpiod is installed
+        local pigpiod_path=$(which pigpiod || echo "/usr/local/bin/pigpiod")
+        
+        cat > /lib/systemd/system/pigpiod.service << EOF
+[Unit]
+Description=Pigpio daemon
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=$pigpiod_path -l
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        systemctl daemon-reload
+        log_success "pigpiod service created"
+    fi
+    
     # Enable pigpio
     systemctl enable pigpiod >> "$INSTALL_LOG" 2>&1
     systemctl start pigpiod >> "$INSTALL_LOG" 2>&1
     
-    # Configure pigpio for timing
-    sed -i 's:^ExecStart=/usr/bin/pigpiod -l:ExecStart=/usr/bin/pigpiod -l -t 0:g' \
+    # Configure pigpio for timing (try both possible locations)
+    sed -i 's:^ExecStart=.*/pigpiod -l:ExecStart='$(which pigpiod || echo "/usr/local/bin/pigpiod")' -l -t 0:g' \
         /lib/systemd/system/pigpiod.service 2>/dev/null || true
+    systemctl daemon-reload
     
     # Enable SPI and I2C
     raspi-config nonint do_spi 0 >> "$INSTALL_LOG" 2>&1
