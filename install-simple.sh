@@ -494,7 +494,7 @@ setup_turnkey() {
     cd "$USER_HOME"
     git clone https://github.com/nikivanov/raspberry-pi-turnkey.git >> "$INSTALL_LOG" 2>&1
     
-    pip3 install wpasupplicantconf >> "$INSTALL_LOG" 2>&1
+    pip3 install --break-system-packages wpasupplicantconf >> "$INSTALL_LOG" 2>&1
     
     cd raspberry-pi-turnkey
     cp config/hostapd /etc/default/hostapd

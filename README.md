@@ -23,21 +23,32 @@ Print every part with 0.2mm layer height. No supports are needed. The base part 
 
 Watney can be installed in multiple ways depending on your needs:
 
-## Option 1: Pre-built SD Card Image (Recommended for New Builds)
-Click on the [Releases](https://github.com/nikivanov/watney/releases) tab and download the [latest Watney SD card image](https://github.com/nikivanov/watney/releases/latest) - it's the large .zip file found under *Assets*. Use [balenaEtcher](https://www.balena.io/etcher/) or similar to write the .img file onto the SD card.
-
-## Option 2: Automated Installation on Existing Pi (New!)
-If you already have a Raspberry Pi with Raspberry Pi OS installed, you can use our automated installation script:
+## Option 1: Automated Installation (Recommended)
+If you already have a Raspberry Pi with Raspberry Pi OS installed, use our simplified automated installation script:
 
 ```bash
-git clone https://github.com/nikivanov/watney.git
+git clone https://github.com/lths/watney.git
 cd watney
-sudo bash install.sh
+sudo bash install-simple.sh
 ```
 
-The installation takes 45-60 minutes and handles everything automatically. See [INSTALL.md](INSTALL.md) for detailed instructions.
+The installation takes 60-90 minutes depending on your Pi model and handles everything automatically. 
 
-**Note**: If you encounter permission errors, use `sudo bash install.sh` instead of `sudo ./install.sh`.
+**For Raspberry Pi 3A+ or systems with limited RAM:** The script automatically detects and handles memory constraints. You may want to add extra swap space before installation:
+
+```bash
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
+
+See [INSTALL.md](INSTALL.md) for detailed instructions and [TROUBLESHOOTING_INSTALL.md](TROUBLESHOOTING_INSTALL.md) if you encounter issues.
+
+## Option 2: Pre-built SD Card Image
+Click on the [Releases](https://github.com/nikivanov/watney/releases) tab and download the [latest Watney SD card image](https://github.com/nikivanov/watney/releases/latest) - it's the large .zip file found under *Assets*. Use [balenaEtcher](https://www.balena.io/etcher/) or similar to write the .img file onto the SD card.
+
+**Note:** Some users have reported issues with older pre-built images. If you experience problems, use the automated installation method above instead.
 
 ## Option 3: Manual Installation
 For advanced users who want complete control, see the [Installation Guide](INSTALL.md) or [Upgrade Guide](UPGRADE_GUIDE.md) for step-by-step manual installation instructions.
