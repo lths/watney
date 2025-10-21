@@ -473,8 +473,22 @@ EOF
 install_systemd_service() {
     log_info "Installing Watney systemd service..."
     
-    cp "$SCRIPT_DIR/packer/watney.service" /etc/systemd/system/ 2>/dev/null || \
+    # Determine actual user
+    local ACTUAL_USER="${SUDO_USER:-$USER}"
+    if [ "$ACTUAL_USER" = "root" ]; then
+        ACTUAL_USER="pi"
+    fi
+    
+    if [ -f "$SCRIPT_DIR/packer/watney.service" ]; then
+        cp "$SCRIPT_DIR/packer/watney.service" /etc/systemd/system/
+        
+        # Replace USER_PLACEHOLDER with actual username
+        sed -i "s|USER_PLACEHOLDER|$ACTUAL_USER|g" /etc/systemd/system/watney.service
+        
+        log_info "Configured watney.service for user: $ACTUAL_USER"
+    else
         log_warning "watney.service not found"
+    fi
     
     systemctl daemon-reload
     systemctl enable watney >> "$INSTALL_LOG" 2>&1

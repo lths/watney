@@ -1,15 +1,15 @@
 [Unit]
 Description=Watney Service
-After=multi-user.target
 
 [Service]
-Type=idle
-User=pi
+ExecStart=/usr/bin/python3 -u /home/USER_PLACEHOLDER/watney/server.py
+WorkingDirectory=/home/USER_PLACEHOLDER/watney
+StandardOutput=journal
+StandardError=journal
 Restart=always
-RestartSec=1
-ExecStart=/usr/bin/python3 -u /home/pi/watney/server.py
-WorkingDirectory=/home/pi/watney
 TimeoutStopSec=5s
+User=USER_PLACEHOLDER
+Group=USER_PLACEHOLDER
 
 [Install]
 WantedBy=multi-user.target

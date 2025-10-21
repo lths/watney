@@ -58,7 +58,13 @@ echo ""
 
 echo "9. Checking write permissions:"
 touch /tmp/watney-test-write 2>/dev/null && rm /tmp/watney-test-write && echo "✓ Can write to /tmp" || echo "✗ Cannot write to /tmp"
-touch /home/pi/watney-test-write 2>/dev/null && rm /home/pi/watney-test-write && echo "✓ Can write to /home/pi" || echo "✗ Cannot write to /home/pi"
+# Test write permissions to user's home directory
+ACTUAL_USER="${SUDO_USER:-$USER}"
+if [ "$ACTUAL_USER" = "root" ]; then
+    ACTUAL_USER="pi"
+fi
+USER_HOME=$(eval echo "~$ACTUAL_USER")
+touch "$USER_HOME/watney-test-write" 2>/dev/null && rm "$USER_HOME/watney-test-write" && echo "✓ Can write to $USER_HOME" || echo "✗ Cannot write to $USER_HOME"
 echo ""
 
 echo "10. Checking if script directory is accessible:"
