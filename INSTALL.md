@@ -8,7 +8,7 @@ For the fastest installation, use the automated installation script:
 
 ```bash
 # Clone the repository
-git clone https://github.com/nikivanov/watney.git
+git clone https://github.com/lths/watney.git
 cd watney
 
 # Run the installation (requires root)
